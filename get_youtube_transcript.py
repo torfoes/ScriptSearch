@@ -24,11 +24,12 @@ def get_youtube_transcript(video_id, language='en'):
         transcript = transcript_list.find_transcript([language])
 
         transcript_data = transcript.fetch()
+        # print(transcript_data)
+        #
+        # formatter = TextFormatter()
+        # text_formatted = formatter.format_transcript(transcript_data)
 
-        formatter = TextFormatter()
-        text_formatted = formatter.format_transcript(transcript_data)
-
-        return text_formatted
+        return transcript_data
 
     except TranscriptsDisabled:
         print("Transcripts are disabled for this video.")
