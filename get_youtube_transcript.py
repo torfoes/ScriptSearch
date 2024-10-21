@@ -42,7 +42,7 @@ def get_youtube_transcript(video_id, language='en'):
 
 
 if __name__ == "__main__":
-    video_id = "dQw4w9WgXcQ"
+    video_id = "qod4hEmITVk"
 
     transcript = get_youtube_transcript(video_id)
 
