@@ -1,0 +1,4 @@
+venv/
+.idea/
+.env
+video_ids.txt

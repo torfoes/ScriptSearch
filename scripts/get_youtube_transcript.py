@@ -25,11 +25,11 @@ def get_youtube_transcript(video_id, language='en'):
 
         transcript_data = transcript.fetch()
         # print(transcript_data)
-        #
-        # formatter = TextFormatter()
-        # text_formatted = formatter.format_transcript(transcript_data)
 
-        return transcript_data
+        formatter = TextFormatter()
+        text_formatted = formatter.format_transcript(transcript_data)
+
+        return text_formatted
 
     except TranscriptsDisabled:
         print("Transcripts are disabled for this video.")
@@ -42,10 +42,12 @@ def get_youtube_transcript(video_id, language='en'):
 
 
 if __name__ == "__main__":
-    video_id = "qod4hEmITVk"
+    video_id = "QMfGzkQqNbM"
 
     transcript = get_youtube_transcript(video_id)
 
     if transcript:
-        print("Transcript:")
-        print(transcript)
+        # Save the transcript to a file
+        with open('transcript.txt', 'w', encoding='utf-8') as f:
+            f.write(transcript)
+        print("Transcript heas been saved to 'transcript.txt'.")
