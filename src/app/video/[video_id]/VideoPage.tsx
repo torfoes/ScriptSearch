@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import YouTube, { YouTubePlayer } from 'react-youtube';
+import YouTube from 'react-youtube';
 import { Video, Segment } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -86,8 +86,14 @@ export default function VideoPage({ video, segments }: VideoPageProps) {
                     </form>
 
                     {/* YouTube Player */}
-
-                        <YouTube videoId={video.videoId} onReady={onPlayerReady} className="flex-1"/>
+                    <YouTube
+                        videoId={video.videoId}
+                        onReady={onPlayerReady}
+                        opts={{
+                            width: '100%',
+                        }}
+                        style={{ width: '100%' }}
+                    />
 
                     {/* Similarity Chart */}
                     {searchResults.length > 0 && (
