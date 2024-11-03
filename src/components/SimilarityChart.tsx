@@ -30,13 +30,12 @@ export function SimilarityChart({ segments, videoId }: SimilarityChartProps) {
     const router = useRouter();
 
     // Prepare the data for the chart, including only every 25th segment
-    const chartData = segments
-        .filter((_, index) => index % 25 === 0)
-        .map((segment) => ({
-            startTime: segment.start,
-            similarityScore: segment.distance,
-            segmentId: segment.segmentId,
-        }));
+    const chartData = segments.map((segment) => ({
+        startTime: segment.start,
+        similarityScore: segment.distance,
+        segmentId: segment.segmentId,
+    }));
+
 
     // Handle bar click
     const handleBarClick = (data: any) => {
