@@ -46,7 +46,6 @@ export default async function Page({ params }: VideoPageProps) {
         .then((rows) => rows[0]);
 
     if (!video) {
-        // If not, fetch and process the video data
         try {
             video = await getVideoData(video_id);
         } catch (error) {
@@ -61,6 +60,6 @@ export default async function Page({ params }: VideoPageProps) {
         .from(segments)
         .where(eq(segments.videoId, video_id));
 
-    // Render the client component with video data
+
     return <VideoPage video={video} segments={videoSegments} />;
 }
