@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import YouTube from 'react-youtube';
-import { Video, Segment } from '@/types';
+import {Video, Segment, SegmentChunk} from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Transcript from '@/components/Transcript';
@@ -11,13 +11,13 @@ import { useSearchParams } from 'next/navigation';
 
 interface VideoPageProps {
     video: Video;
-    segments: Segment[];
+    segments: SegmentChunk[];
 }
 
 export default function VideoPage({ video, segments }: VideoPageProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<Segment[]>([]);
-    const [player, setPlayer] = useState<YouTubePlayer | null>(null);
+    const [searchResults, setSearchResults] = useState<SegmentChunk[]>([]);
+    const [player, setPlayer] = useState<YouTube | null>(null);
     const searchParams = useSearchParams();
 
     const handleSearch = async (e: React.FormEvent) => {
@@ -42,21 +42,15 @@ export default function VideoPage({ video, segments }: VideoPageProps) {
 
         if (response.ok) {
             setSearchResults(data.segments);
-            setQueryEmbedding(data.queryEmbedding);
         } else {
             console.error('Search error:', data.error);
         }
     };
 
     const onPlayerReady = (event: any) => {
-        const playerInstance: YouTubePlayer = event.target;
+        const playerInstance: YouTube = event.target;
         setPlayer(playerInstance);
 
-        // Seek to the time specified in the URL query parameter 't' if it exists
-        const time = searchParams.get('t');
-        if (time) {
-            playerInstance.seekTo(parseInt(time), true);
-        }
     };
 
     // Function to handle seeking when clicking on transcript segments
@@ -97,17 +91,16 @@ export default function VideoPage({ video, segments }: VideoPageProps) {
 
                     {/* Similarity Chart */}
                     {searchResults.length > 0 && (
-                        <div className="mt-4">
-                            <SimilarityChart
-                                segments={searchResults}
-                                videoId={video.videoId}
-                            />
-                        </div>
+                        <SimilarityChart
+                            segments={searchResults}
+                            videoId={video.videoId}
+                            onSegmentClick={handleSegmentClick}
+                        />
                     )}
                 </div>
 
                 {/* Right Column - Transcript */}
-                <div className="flex-1">
+                <div className="flex-1 h-[700px] overflow-hidden">
                     <Transcript
                         segments={searchResults.length > 0 ? searchResults : segments}
                         onSegmentClick={handleSegmentClick}

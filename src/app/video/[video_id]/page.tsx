@@ -1,9 +1,7 @@
-// app/video/[video_id]/page.tsx
-
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { db } from '@/db';
-import { videos, segments } from '@/db/schema';
+import { videos, segmentChunks } from '@/db/schema';
 import { getVideoData } from '@/lib/video';
 import VideoPage from './VideoPage';
 import { eq } from 'drizzle-orm';
@@ -54,12 +52,11 @@ export default async function Page({ params }: VideoPageProps) {
         }
     }
 
-    // Fetch segments associated with the video
-    const videoSegments = await db
+    // Fetch segment chunks associated with the video
+    const videoChunks = await db
         .select()
-        .from(segments)
-        .where(eq(segments.videoId, video_id));
+        .from(segmentChunks)
+        .where(eq(segmentChunks.videoId, video_id));
 
-
-    return <VideoPage video={video} segments={videoSegments} />;
+    return <VideoPage video={video} segments={videoChunks} />;
 }

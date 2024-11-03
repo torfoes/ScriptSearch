@@ -1,28 +1,34 @@
 'use client';
 
-import { Segment } from '@/types';
+import { SegmentChunk } from '@/types';
+import { formatTime } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface TranscriptProps {
-    segments: Segment[];
+    segments: SegmentChunk[];
+    onSegmentClick?: (startTime: number) => void;
 }
 
-export default function Transcript({ segments }: TranscriptProps) {
+export default function Transcript({ segments, onSegmentClick }: TranscriptProps) {
     return (
-        <div className="mt-4">
+        <ScrollArea className="h-full p-4">
             {segments.map((segment) => (
-                <div key={segment.segmentId} className="mb-2">
-                    <p className="text-sm text-muted-foreground">
-                        {formatTime(segment.start)} - {formatTime(segment.start + segment.duration)}
-                    </p>
-                    <p>{segment.text}</p>
-                </div>
+                <Card
+                    key={segment.chunkId}
+                    className="mb-4 cursor-pointer"
+                    onClick={() => onSegmentClick?.(segment.start)}
+                >
+                    <CardHeader>
+                        <CardTitle className="text-sm text-muted-foreground">
+                            {formatTime(segment.start)} - {formatTime(segment.end)}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p>{segment.text}</p>
+                    </CardContent>
+                </Card>
             ))}
-        </div>
+        </ScrollArea>
     );
-}
-
-function formatTime(seconds: number): string {
-    const date = new Date(0);
-    date.setSeconds(seconds);
-    return date.toISOString().substr(11, 8);
 }

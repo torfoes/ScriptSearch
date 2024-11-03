@@ -1,5 +1,3 @@
-// app/api/search/route.ts
-
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/db';
@@ -34,18 +32,17 @@ export async function POST(request: Request) {
           *,
           (embedding <=> ${sql.raw(`'${vectorString}'::vector`)}) AS distance
         FROM
-          segments
+          segment_chunks
         WHERE
           video_id = ${videoId}
         ORDER BY
-          segment_id ASC
+          chunk_id ASC
       `
         );
 
         // Return all segments with their similarity scores
         return NextResponse.json({
             segments: results.rows,
-            queryEmbedding,
         });
     } catch (error) {
         console.error('Error during search:', error);

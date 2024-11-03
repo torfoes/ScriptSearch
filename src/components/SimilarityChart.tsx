@@ -4,43 +4,44 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import {
     ChartContainer,
     ChartTooltipContent,
-    ChartConfig
+    ChartConfig,
 } from '@/components/ui/chart';
-import { useRouter } from 'next/navigation';
-import { Segment } from '@/types';
+// Removed useRouter import
+// import { useRouter } from 'next/navigation';
+import { SegmentChunk } from '@/types';
 import { formatTime } from '@/lib/utils';
 
 const chartConfig = {
     desktop: {
-        label: "Desktop",
-        color: "#2563eb",
+        label: 'Desktop',
+        color: '#2563eb',
     },
     mobile: {
-        label: "Mobile",
-        color: "#60a5fa",
+        label: 'Mobile',
+        color: '#60a5fa',
     },
 } satisfies ChartConfig;
 
 interface SimilarityChartProps {
-    segments: Segment[];
+    segments: SegmentChunk[];
     videoId: string;
+    onSegmentClick?: (startTime: number) => void;
 }
 
-export function SimilarityChart({ segments, videoId }: SimilarityChartProps) {
-    const router = useRouter();
-
-    // Prepare the data for the chart, including only every 25th segment
+export function SimilarityChart({ segments, videoId, onSegmentClick }: SimilarityChartProps) {
+    // Prepare the data for the chart
     const chartData = segments.map((segment) => ({
         startTime: segment.start,
         similarityScore: segment.distance,
-        segmentId: segment.segmentId,
+        chunkId: segment.chunkId,
     }));
-
 
     // Handle bar click
     const handleBarClick = (data: any) => {
         const { startTime } = data;
-        router.push(`/video/${videoId}?t=${Math.floor(startTime)}`);
+        if (onSegmentClick) {
+            onSegmentClick(startTime);
+        }
     };
 
     return (

@@ -1,15 +1,20 @@
 // lib/video.ts
 
 import { db } from '@/db';
-import { videos, segments } from '@/db/schema';
+import { videos, segments, segmentChunks } from '@/db/schema';
 import { youtube_v3 } from '@googleapis/youtube';
 import { getEmbedding } from '@/lib/embeddings';
 import { YoutubeTranscript } from 'youtube-transcript';
+import { encoding_for_model } from '@dqbd/tiktoken';
 
 // Initialize YouTube API client
 const youtube = new youtube_v3.Youtube({
     auth: process.env.YOUTUBE_API_KEY,
 });
+
+const encoding = encoding_for_model('text-embedding-ada-002');
+
+const TARGET_TOKEN_COUNT = 500;
 
 interface TranscriptItem {
     text: string;
@@ -19,13 +24,11 @@ interface TranscriptItem {
 
 export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]> {
     try {
-        // Fetch the transcript using the provided YoutubeTranscript class
         const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
 
-        // Map the transcript data to match the TranscriptItem interface
         return transcript.map((item) => ({
             text: item.text,
-            start: item.offset, // 'offset' corresponds to the 'start' time
+            start: item.offset,
             duration: item.duration,
         }));
     } catch (error) {
@@ -84,23 +87,83 @@ export async function getVideoData(videoId: string) {
         throw new Error('Transcript not found');
     }
 
-    // Process transcript: compute embeddings and prepare segments data
-    const segmentsData = await Promise.all(
-        transcript.map(async (item) => {
-            const { text, start, duration } = item;
-            const embedding = await getEmbedding(text);
+    // Insert segments into the 'segments' table (without embeddings)
+    const segmentsData = transcript.map((item) => {
+        const { text, start, duration } = item;
+        return {
+            videoId,
+            start,
+            duration,
+            text,
+        };
+    });
 
+    await db.insert(segments).values(segmentsData);
+
+    // Process segments into chunks
+    const chunks = [];
+    let currentChunkText = '';
+    let currentTokenCount = 0;
+    let currentStart: number | null = null;
+    let currentEnd: number | null = null;
+
+    for (const item of transcript) {
+        const { text, start, duration } = item;
+
+        // Tokenize the text
+        const tokens = encoding.encode(text);
+        const tokenCount = tokens.length;
+
+        if (currentTokenCount + tokenCount > TARGET_TOKEN_COUNT) {
+            // Save the current chunk
+            if (currentChunkText.trim()) {
+                chunks.push({
+                    videoId,
+                    start: currentStart!,
+                    end: currentEnd!,
+                    text: currentChunkText.trim(),
+                });
+            }
+
+            // Reset variables
+            currentChunkText = text;
+            currentTokenCount = tokenCount;
+            currentStart = start;
+            currentEnd = start + duration;
+        } else {
+            // Accumulate
+            if (currentStart === null) currentStart = start;
+            currentChunkText += ' ' + text;
+            currentTokenCount += tokenCount;
+            currentEnd = start + duration;
+        }
+    }
+
+    // Save any remaining chunk
+    if (currentChunkText.trim()) {
+        chunks.push({
+            videoId,
+            start: currentStart!,
+            end: currentEnd!,
+            text: currentChunkText.trim(),
+        });
+    }
+
+    // Compute embeddings for each chunk and insert into 'segment_chunks' table
+    const chunksData = await Promise.all(
+        chunks.map(async (chunk) => {
+            const embedding = await getEmbedding(chunk.text);
             return {
-                videoId,
-                start,
-                duration,
-                text,
+                videoId: chunk.videoId,
+                start: chunk.start,
+                end: chunk.end,
+                text: chunk.text,
                 embedding,
             };
         })
     );
 
-    await db.insert(segments).values(segmentsData);
+    await db.insert(segmentChunks).values(chunksData);
 
     return video;
 }
