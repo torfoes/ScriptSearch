@@ -1,100 +1,96 @@
 'use client';
 
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Form,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormControl,
+    FormDescription,
+    FormMessage,
+} from '@/components/ui/form';
 import { Search } from 'lucide-react';
-import { z } from 'zod';
 
-const youtubeLinkSchema = z
-    .string()
-    .url()
-    .regex(
-        /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/,
-        'Please enter a valid YouTube link'
-    );
+const formSchema = z.object({
+    youtubeLink: z
+        .string()
+        .min(1, { message: 'Please enter a YouTube link' })
+        .url({ message: 'Please enter a valid URL' })
+        .regex(
+            /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]{11})(.*)?$/,
+            { message: 'Please enter a valid YouTube video link' }
+        ),
+});
+
+type FormSchemaType = z.infer<typeof formSchema>;
 
 export default function SearchForm() {
-    const [youtubeLink, setYoutubeLink] = useState('');
-    const [error, setError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const router = useRouter();
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
+    const form = useForm<FormSchemaType>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            youtubeLink: '',
+        },
+    });
 
-        // Validate the YouTube link using Zod
-        const result = youtubeLinkSchema.safeParse(youtubeLink);
+    function onSubmit(values: FormSchemaType) {
+        const youtubeLink = values.youtubeLink;
 
-        if (!result.success) {
-            setError(result.error.errors[0].message);
-            setIsSubmitting(false);
-            return;
+        // Extract video ID from YouTube link
+        const match = youtubeLink.match(
+            /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w\-]{11})/
+        );
+        const videoId = match ? match[1] : null;
+
+        if (videoId) {
+            // Redirect to /video/[video_id]
+            router.push(`/video/${videoId}`);
+        } else {
+            // Handle invalid video ID
+            form.setError('youtubeLink', {
+                type: 'manual',
+                message: 'Unable to extract video ID from the provided link',
+            });
         }
-
-        setError('');
-        // Proceed with your search logic here
-        console.log('Searching for:', youtubeLink);
-
-        // Simulate async operation (e.g., navigating to a search results page)
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setIsSubmitting(false);
-    };
+    }
 
     return (
-        <div className="w-full max-w-md space-y-8">
-            <div className="text-center">
-                <h2 className="mt-6 text-3xl font-extrabold">
-                    Search YouTube Transcripts
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Enter a YouTube video link to search its transcript
-                </p>
-            </div>
-            <form onSubmit={handleSearch} className="mt-8 space-y-6">
-                <div>
-                    <label htmlFor="youtube-link" className="sr-only">
-                        YouTube Link
-                    </label>
-                    <Input
-                        id="youtube-link"
-                        name="youtube-link"
-                        type="url"
-                        required
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        value={youtubeLink}
-                        onChange={(e) => setYoutubeLink(e.target.value)}
-                    />
-                    {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-                </div>
-                <div>
-                    <Button
-                        type="submit"
-                        className="w-full flex justify-center items-center"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? (
-                            <span>Loading...</span>
-                        ) : (
-                            <>
-                                <Search className="h-5 w-5 mr-2" />
-                                Search Transcript
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </form>
-            <div className="text-center">
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField
+                    control={form.control}
+                    name="youtubeLink"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>YouTube Link</FormLabel>
+                            <FormControl>
+                                <Input
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormDescription>
+                                Enter a YouTube video link to search its transcript.
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <Button
-                    variant="link"
-                    onClick={() =>
-                        window.open('https://example.com/scriptsearch-extension', '_blank')
-                    }
+                    type="submit"
+                    className="w-full flex justify-center items-center"
                 >
-                    Add ScriptSearch Extension
+                    <Search className="h-5 w-5 mr-2" />
+                    Search Transcript
                 </Button>
-            </div>
-        </div>
+            </form>
+        </Form>
     );
 }
