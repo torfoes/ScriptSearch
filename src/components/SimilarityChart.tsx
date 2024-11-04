@@ -32,7 +32,7 @@ export function SimilarityChart({ segments, videoId, onSegmentClick }: Similarit
     // Prepare the data for the chart
     const chartData = segments.map((segment) => ({
         startTime: segment.start,
-        similarityScore: segment.distance,
+        similarityScore: 1/(1 + segment.distance),
         chunkId: segment.chunkId,
     }));
 
@@ -57,6 +57,11 @@ export function SimilarityChart({ segments, videoId, onSegmentClick }: Similarit
                     ) {
                         handleBarClick(event.activePayload[0].payload);
                     }
+                }}
+                
+                margin={{
+                    top: 20,
+                    bottom: 10,
                 }}
             >
                 <CartesianGrid vertical={false} />
