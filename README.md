@@ -2,16 +2,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, create and run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -20,17 +15,41 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Setting up Environmental Values
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env` or `.env.local` file and add the following variables:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```txt
+POSTGRES_DATABASE=
+POSTGRES_HOST=
+POSTGRES_PASSWORD=
+POSTGRES_PRISMA_URL=
+POSTGRES_URL=
+POSTGRES_URL_NON_POOLING=
+POSTGRES_URL_NO_SSL=
+POSTGRES_USER=
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+OPENAI_API_KEY=
+YOUTUBE_API_KEY=
+```
 
-## Deploy on Vercel
+Due to utilizing OpenAI's embedding features to generate semantic-based vectors for both the transcript and query, an OpenAI API key is required
+to run the following web app.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+A database is required to store the vector embeddings returned by the OpenAI API. From the database, vector-based distance calculations can be made
+utilizing the following pSQL command: 
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```psql
+SELECT
+    *,
+    (embedding <=> ${sql.raw(`'${vectorString}'::vector`)}) AS distance
+FROM
+    segment_chunks
+WHERE
+    video_id = ${videoId}
+ORDER BY
+    chunk_id ASC
+```
+Where `embedding` and `vectorString` are the transcript and query embeddings respectively.
+
+Without the API key and a database to store these embeddings, similarity calculations cannot be done.
