@@ -34,9 +34,13 @@ YOUTUBE_API_KEY=
 ```
 
 Due to utilizing OpenAI's embedding features to generate semantic-based vectors for both the transcript and query, an OpenAI API key is required
-to run the following web app.
+to run the following web app. A database is also required to store the vector embeddings returned by the OpenAI API. 
 
-A database is required to store the vector embeddings returned by the OpenAI API. From the database, vector-based distance calculations can be made
+Without the API key and a database to store these embeddings, similarity calculations cannot be done.
+
+## Core Algorithm Explanation
+
+From the database, vector-based euclidean distance calculations can be made
 utilizing the following pSQL command: 
 
 ```psql
@@ -52,4 +56,8 @@ ORDER BY
 ```
 Where `embedding` and `vectorString` are the transcript and query embeddings respectively.
 
-Without the API key and a database to store these embeddings, similarity calculations cannot be done.
+The following command returns the euclidean distances between the query embedding and the transcript embedding chunks.
+To convert them into a similarity score, simply apply the distance to following formula:
+```
+similarity score = 1 / (1 + distance)
+```
