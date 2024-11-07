@@ -5,6 +5,7 @@ import { videos, segmentChunks } from '@/db/schema';
 import { getVideoData } from '@/lib/video';
 import VideoPage from './VideoPage';
 import { eq } from 'drizzle-orm';
+import { SegmentChunk } from '@/db/schema'; // Removed 'Video' from import
 
 interface VideoPageProps {
     params: {
@@ -53,7 +54,7 @@ export default async function Page({ params }: VideoPageProps) {
     }
 
     // Fetch segment chunks associated with the video
-    const videoChunks = await db
+    const videoChunks: SegmentChunk[] = await db
         .select()
         .from(segmentChunks)
         .where(eq(segmentChunks.videoId, video_id));

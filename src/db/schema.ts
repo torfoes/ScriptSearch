@@ -37,3 +37,12 @@ export const segmentChunks = pgTable(
             .using('hnsw', table.embedding.op('vector_cosine_ops')),
     })
 );
+
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = typeof videos.$inferInsert;
+
+export type Segment = typeof segments.$inferSelect;
+export type InsertSegment = typeof segments.$inferInsert;
+
+export type SegmentChunk = typeof segmentChunks.$inferSelect;
+export type InsertSegmentChunk = typeof segmentChunks.$inferInsert;

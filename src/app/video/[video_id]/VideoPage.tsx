@@ -1,24 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import YouTube from 'react-youtube';
-import {Video, Segment, SegmentChunk} from '@/types';
+import { Video, SegmentChunk } from '@/db/schema';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Transcript from '@/components/Transcript';
 import { SimilarityChart } from '@/components/SimilarityChart';
-import { useSearchParams } from 'next/navigation';
 
 interface VideoPageProps {
     video: Video;
     segments: SegmentChunk[];
 }
 
+interface SegmentChunkWithDistance extends SegmentChunk {
+    distance: number;
+}
+
+type SearchResponse =
+    | { segments: SegmentChunkWithDistance[] }
+    | { error: string };
+
 export default function VideoPage({ video, segments }: VideoPageProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<SegmentChunk[]>([]);
-    const [player, setPlayer] = useState<YouTube | null>(null);
-    const searchParams = useSearchParams();
+    const [searchResults, setSearchResults] = useState<SegmentChunkWithDistance[]>([]);
+    const [player, setPlayer] = useState<YT.Player | null>(null);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,25 +43,26 @@ export default function VideoPage({ video, segments }: VideoPageProps) {
             },
         });
 
-        const data = await response.json();
-        console.log(data);
+        const data: SearchResponse = await response.json();
 
-        if (response.ok) {
+        if (response.ok && 'segments' in data) {
             setSearchResults(data.segments);
-        } else {
+        } else if ('error' in data) {
             console.error('Search error:', data.error);
+        } else {
+            console.error('Unknown error occurred during search.');
         }
+
     };
 
-    const onPlayerReady = (event: any) => {
-        const playerInstance: YouTube = event.target;
+    const onPlayerReady = (event: { target: YT.Player }) => {
+        const playerInstance = event.target;
         setPlayer(playerInstance);
-
     };
 
     // Function to handle seeking when clicking on transcript segments
-    const handleSegmentClick = (startTime: number) => {
-        if (player) {
+    const handleSegmentClick = (startTime: number | null) => {
+        if (player && startTime !== null) {
             player.seekTo(startTime, true);
         }
     };
@@ -93,7 +100,6 @@ export default function VideoPage({ video, segments }: VideoPageProps) {
                     {searchResults.length > 0 && (
                         <SimilarityChart
                             segments={searchResults}
-                            videoId={video.videoId}
                             onSegmentClick={handleSegmentClick}
                         />
                     )}

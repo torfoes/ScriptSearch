@@ -1,6 +1,6 @@
 'use client';
 
-import { SegmentChunk } from '@/types';
+import { SegmentChunk } from '@/db/schema';
 import { formatTime } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -17,11 +17,15 @@ export default function Transcript({ segments, onSegmentClick }: TranscriptProps
                 <Card
                     key={segment.chunkId}
                     className="mb-4 cursor-pointer"
-                    onClick={() => onSegmentClick?.(segment.start)}
+                    onClick={() => {
+                        if (segment.start !== null) {
+                            onSegmentClick?.(segment.start);
+                        }
+                    }}
                 >
                     <CardHeader>
                         <CardTitle className="text-sm text-muted-foreground">
-                            {formatTime(segment.start)} - {formatTime(segment.end)}
+                            {formatTime(segment.start ?? 0)} - {formatTime(segment.end ?? 0)}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>

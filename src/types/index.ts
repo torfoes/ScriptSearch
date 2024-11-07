@@ -10,17 +10,8 @@ export interface Segment {
     videoId: string;
     start: number;
     duration: number;
-    text: string;t
-    embedding?: number[];
-    distance?: number;
-}
-
-export interface SegmentChunk {
-    chunkId: number;
-    videoId: string;
-    start: number;
-    end: number;
     text: string;
     embedding?: number[];
     distance?: number;
 }
+

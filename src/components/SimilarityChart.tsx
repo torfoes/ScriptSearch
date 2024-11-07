@@ -6,9 +6,7 @@ import {
     ChartTooltipContent,
     ChartConfig,
 } from '@/components/ui/chart';
-// Removed useRouter import
-// import { useRouter } from 'next/navigation';
-import { SegmentChunk } from '@/types';
+import { SegmentChunk } from '@/db/schema';
 import { formatTime } from '@/lib/utils';
 
 const chartConfig = {
@@ -22,24 +20,33 @@ const chartConfig = {
     },
 } satisfies ChartConfig;
 
-interface SimilarityChartProps {
-    segments: SegmentChunk[];
-    videoId: string;
-    onSegmentClick?: (startTime: number) => void;
+interface SegmentChunkWithDistance extends SegmentChunk {
+    distance: number;
 }
 
-export function SimilarityChart({ segments, videoId, onSegmentClick }: SimilarityChartProps) {
+interface SimilarityChartProps {
+    segments: SegmentChunkWithDistance[];
+    onSegmentClick?: (startTime: number | null) => void;
+}
+
+interface ChartData {
+    startTime: number | null;
+    similarityScore: number;
+    chunkId: number;
+}
+
+export function SimilarityChart({ segments, onSegmentClick }: SimilarityChartProps) {
     // Prepare the data for the chart
-    const chartData = segments.map((segment) => ({
+    const chartData: ChartData[] = segments.map((segment) => ({
         startTime: segment.start,
-        similarityScore: 1/(1 + segment.distance),
+        similarityScore: 1 / (1 + segment.distance),
         chunkId: segment.chunkId,
     }));
 
     // Handle bar click
-    const handleBarClick = (data: any) => {
+    const handleBarClick = (data: ChartData) => {
         const { startTime } = data;
-        if (onSegmentClick) {
+        if (onSegmentClick && startTime !== null) {
             onSegmentClick(startTime);
         }
     };
@@ -58,7 +65,6 @@ export function SimilarityChart({ segments, videoId, onSegmentClick }: Similarit
                         handleBarClick(event.activePayload[0].payload);
                     }
                 }}
-                
                 margin={{
                     top: 20,
                     bottom: 10,
