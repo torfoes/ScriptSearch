@@ -5,14 +5,14 @@ import { videos, segments, segmentChunks } from '@/db/schema';
 import { youtube_v3 } from '@googleapis/youtube';
 import { getEmbedding } from '@/lib/embeddings';
 import { YoutubeTranscript } from 'youtube-transcript';
-import { encoding_for_model } from '@dqbd/tiktoken';
+import { encodingForModel } from "js-tiktoken";
 
 // Initialize YouTube API client
 const youtube = new youtube_v3.Youtube({
     auth: process.env.YOUTUBE_API_KEY,
 });
 
-const encoding = encoding_for_model('text-embedding-ada-002');
+const encoding = encodingForModel('text-embedding-ada-002');
 
 const TARGET_TOKEN_COUNT = 500;
 
