@@ -5,7 +5,7 @@ import { videos, segmentChunks } from '@/db/schema';
 import { getVideoData } from '@/lib/video';
 import VideoPage from './VideoPage';
 import { eq } from 'drizzle-orm';
-import { SegmentChunk } from '@/db/schema'; // Removed 'Video' from import
+import { SegmentChunk } from '@/db/schema';
 
 interface VideoPageProps {
     params: {
