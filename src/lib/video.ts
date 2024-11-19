@@ -6,6 +6,7 @@ import { youtube_v3 } from '@googleapis/youtube';
 import { getEmbedding } from '@/lib/embeddings';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { encodingForModel } from "js-tiktoken";
+import { decode } from 'he';
 
 // Initialize YouTube API client
 const youtube = new youtube_v3.Youtube({
@@ -14,7 +15,7 @@ const youtube = new youtube_v3.Youtube({
 
 const encoding = encodingForModel('text-embedding-ada-002');
 
-const TARGET_TOKEN_COUNT = 500;
+const TARGET_TOKEN_COUNT = 300;
 
 interface TranscriptItem {
     text: string;
@@ -26,16 +27,23 @@ export async function fetchTranscript(videoId: string): Promise<TranscriptItem[]
     try {
         const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
 
-        return transcript.map((item) => ({
-            text: item.text,
-            start: item.offset,
-            duration: item.duration,
-        }));
+        return transcript.map((item) => {
+            const originalText = item.text;
+            const firstDecodedText = decode(originalText);
+            const fullyDecodedText = decode(firstDecodedText);
+
+            return {
+                text: fullyDecodedText,
+                start: item.offset,
+                duration: item.duration,
+            };
+        });
     } catch (error) {
         console.error('Error fetching transcript:', error);
         throw error;
     }
 }
+
 
 export async function getVideoData(videoId: string) {
     // Fetch video details from YouTube
