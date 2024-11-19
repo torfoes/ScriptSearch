@@ -9,5 +9,4 @@ const pool = new Pool({
     },
 });
 
-// eslint-disable-next-line
 export const db = drizzle(pool);
