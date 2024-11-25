@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "video_id_index" ON "segment_chunks" USING btree ("video_id");

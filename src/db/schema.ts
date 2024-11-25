@@ -35,6 +35,7 @@ export const segmentChunks = pgTable(
     (table) => ({
         embeddingIndex: index('embedding_index')
             .using('hnsw', table.embedding.op('vector_cosine_ops')),
+        videoIdIndex: index('video_id_index').on(table.videoId),
     })
 );
 

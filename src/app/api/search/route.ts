@@ -22,22 +22,22 @@ export async function POST(request: Request) {
             throw new Error('Invalid query embedding.');
         }
 
-        // Serialize the embedding into a vector literal
+        // Serialize the embedding into a vector literal safely
         const vectorString = `[${queryEmbedding.join(',')}]`;
 
-        // Perform similarity computation in the database without reordering the segments
+        // Perform similarity computation in the database using parameterized queries
         const results = await db.execute(
             sql`
-        SELECT
-          *,
-          (embedding <=> ${sql.raw(`'${vectorString}'::vector`)}) AS distance
-        FROM
-          segment_chunks
-        WHERE
-          video_id = ${videoId}
-        ORDER BY
-          chunk_id ASC
-      `
+                SELECT
+                    *,
+                    (embedding <=> ${sql.param(vectorString)}::vector) AS distance
+                FROM
+                    segment_chunks
+                WHERE
+                    video_id = ${sql.param(videoId)}
+                ORDER BY
+                    chunk_id ASC
+            `
         );
 
         // Return all segments with their similarity scores
